@@ -49,14 +49,22 @@ def _parse_shapefile(name):
     # Get the zipfile
     r = requests.get(url)
     buffer = io.BytesIO(bytes(r.content))
+
+    # Untar it
     file_dict = _untar(buffer)
+    
+    # Stuff it into a zip
     zf = _zip(file_dict)
+    
+    # Ask fiona to read to the zip
     shp = fiona.BytesCollection(zf.getvalue())
 
-    # Convert it GeoJSON and return it
+    # Convert the shp to GeoJSON features
     feature_list = [
         Feature(geometry=d['geometry'], properties=d['properties']) for d in shp
     ]
+    
+    # We're done here
     return FeatureCollection(feature_list)
 
 
@@ -67,12 +75,19 @@ def _untar(fileobj):
     Returns a dict of the file-like objects inside the archive key to their names.
     """
     file_dict = {}
+    # Open the tarfile
     with tarfile.open(fileobj=fileobj) as tar:
+        # Walk thru each member
         for t in tar:
+            # if it's a file ...
             if (t.isfile()):
+                # ... extract it ...
                 file_bytes = tar.extractfile(t).read()
+                # .. read it into a file-like object ...
                 file_buffer = io.BytesIO(file_bytes)
+                # ... add it to our file dict with its name.
                 file_dict[t.name] = file_buffer
+    # Pass it all back
     return file_dict
 
 
@@ -87,9 +102,9 @@ def _zip(file_dict):
 
     # Turn it into a zipfile
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-        # Download each piece of the shapefile ...
+        # Walk thru each piece in the tarfile ...
         for n, f in file_dict.items():
             # ... and add it to the in-memory zipfile
             zf.writestr(n, f.getvalue())
-
+    # Pass back the buffer with the zip in it
     return buffer
