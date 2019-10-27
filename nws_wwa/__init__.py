@@ -52,10 +52,10 @@ def _parse_shapefile(name):
 
     # Untar it
     file_dict = _untar(buffer)
-    
+
     # Stuff it into a zip
     zf = _zip(file_dict)
-    
+
     # Ask fiona to read to the zip
     shp = fiona.BytesCollection(zf.getvalue())
 
@@ -63,7 +63,7 @@ def _parse_shapefile(name):
     feature_list = [
         Feature(geometry=d['geometry'], properties=d['properties']) for d in shp
     ]
-    
+
     # We're done here
     return FeatureCollection(feature_list)
 
