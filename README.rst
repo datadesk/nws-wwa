@@ -46,9 +46,9 @@ Python usage
 Import the library. ::
 
     >>> import nws_wwa
-    >>> data = nws_wwa.all()
-    >>> data = nws_wwa.hazards()
-    >>> data = nws_wwa.warnings()
+    >>> data = nws_wwa.get_all()
+    >>> data = nws_wwa.get_hazards()
+    >>> data = nws_wwa.get_warnings()
 
 
 Contributing
