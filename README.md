@@ -1,5 +1,7 @@
 Download watch, warning and advisory data from the National Weather Service
 
+Hourly scrapes powered by a GitHub Action are stored in the `data` directory.
+
 ## Installation
 
 ```bash
