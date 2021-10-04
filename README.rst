@@ -1,6 +1,3 @@
-nws-wwa
-=======
-
 Download watch, warning and advisory data from the National Weather Service
 
 .. image:: https://travis-ci.org/datadesk/nws-wwa.svg?branch=master
