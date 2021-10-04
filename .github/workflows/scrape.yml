@@ -21,7 +21,9 @@ jobs:
 
       - id: make
         name: Run make command
-        run: make scrape
+        run: |
+          pipenv run python setup.py install
+          make scrape
         shell: bash
 
       - id: commit
