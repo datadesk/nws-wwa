@@ -12,6 +12,7 @@ setup(
     version='0.0.1',
     description="Download watch, warning and advisory data from the National Weather Service",
     long_description=read('README.rst'),
+    long_description_content_type='text/markdown',
     author='Los Angeles Times Data and Graphics Department',
     author_email='datagraphics@latimes.com',
     url='http://www.github.com/datadesk/nws-wwa',
