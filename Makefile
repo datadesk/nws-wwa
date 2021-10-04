@@ -5,6 +5,11 @@ test:
 	pipenv run coverage run test.py
 	pipenv run coverage report -m
 
+scrape:
+	pipenv run nwswwa all > data/all.json
+	pipenv run nwswwa hazards > data/hazards.json
+	pipenv run nwswwa warnings > data/warnings.json
+
 ship:
 	rm -rf build/
 	rm -rf dist/
