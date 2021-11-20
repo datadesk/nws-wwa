@@ -8,7 +8,7 @@ from nws_wwa import (
 )
 
 
-class GeomacWildfiresUnitTest(unittest.TestCase):
+class NwsWwaUnitTest(unittest.TestCase):
 
     def test_all(self):
         get_all()
