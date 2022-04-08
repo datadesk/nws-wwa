@@ -2,8 +2,7 @@ lint:
 	pipenv run flake8 ./
 
 test:
-	pipenv run coverage run test.py
-	pipenv run coverage report -m
+	pipenv run pytest tests/test.py
 
 scrape:
 	pipenv run nwswwa all > data/all.json
