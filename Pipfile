@@ -10,6 +10,7 @@ pytest = "*"
 pytest-vcr = "*"
 typing-extensions = "*"
 pre-commit = "*"
+setuptools-scm = "*"
 
 [packages]
 fiona = "*"
