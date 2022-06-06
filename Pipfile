@@ -6,7 +6,6 @@ verify_ssl = true
 [dev-packages]
 twine = "*"
 flake8 = "*"
-coverage = "*"
 pytest = "*"
 pytest-vcr = "*"
 typing-extensions = "*"
