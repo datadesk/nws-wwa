@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
 import click
 from nws_wwa import (
     get_all,
@@ -12,6 +10,7 @@ from nws_wwa import (
 def cmd():
     """
     A command-line interface for downloading watch, warning and advisory data from the National Weather Service.
+
     Returns GeoJSON.
     """
     pass

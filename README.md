@@ -38,10 +38,10 @@ nwswwa warnings
 Import the library.
 
 ```python
->>> import nws_wwa
->>> data = nws_wwa.get_all()
->>> data = nws_wwa.get_hazards()
->>> data = nws_wwa.get_warnings()
+import nws_wwa
+data = nws_wwa.get_all()
+data = nws_wwa.get_hazards()
+data = nws_wwa.get_warnings()
 ```
 
 ## Contributing
@@ -55,13 +55,7 @@ pipenv install --dev
 Run tests.
 
 ```bash
-make test
-```
-
-Shipping new version to PyPI.
-
-```bash
-make ship
+pipenv run python setup.py test
 ```
 
 ## Developing the CLI
@@ -69,5 +63,5 @@ make ship
 The command-line interface is implemented using Click and setuptools. To install it locally for development inside your virtual environment, run the following installation command, as prescribed by the [Click documentation](https://click.palletsprojects.com/en/7.x/setuptools/#setuptools-integration).
 
 ```bash
-pip install --editable .
+pipenv run pip install --editable .
 ```
