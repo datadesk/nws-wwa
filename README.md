@@ -39,6 +39,7 @@ Import the library.
 
 ```python
 import nws_wwa
+
 data = nws_wwa.get_all()
 data = nws_wwa.get_hazards()
 data = nws_wwa.get_warnings()

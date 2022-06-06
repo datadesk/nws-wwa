@@ -1,7 +1,8 @@
 import io
-import fiona
-import zipfile
 import tarfile
+import zipfile
+
+import fiona
 import requests
 from geojson import Feature, FeatureCollection
 
@@ -12,7 +13,7 @@ def get_all():
 
     Returns a GeoJSON object.
     """
-    return _parse_shapefile('current_all.tar.gz')
+    return _parse_shapefile("current_all.tar.gz")
 
 
 def get_hazards():
@@ -21,7 +22,7 @@ def get_hazards():
 
     Returns a GeoJSON object.
     """
-    return _parse_shapefile('current_hazards.tar.gz')
+    return _parse_shapefile("current_hazards.tar.gz")
 
 
 def get_warnings():
@@ -30,7 +31,7 @@ def get_warnings():
 
     Returns a GeoJSON object.
     """
-    return _parse_shapefile('current_warnings.tar.gz')
+    return _parse_shapefile("current_warnings.tar.gz")
 
 
 def _parse_shapefile(name):
@@ -40,9 +41,9 @@ def _parse_shapefile(name):
     Returns a GeoJSON object.
     """
     # Figure out the url
-    domain = 'tgftp.nws.noaa.gov'
-    base_dir = 'SL.us008001/DF.sha/DC.cap/DS.WWA'
-    url = f'https://{domain}/{base_dir}/{name}'
+    domain = "tgftp.nws.noaa.gov"
+    base_dir = "SL.us008001/DF.sha/DC.cap/DS.WWA"
+    url = f"https://{domain}/{base_dir}/{name}"
 
     # Get the zipfile
     r = requests.get(url)
@@ -59,7 +60,7 @@ def _parse_shapefile(name):
 
     # Convert the shp to GeoJSON features
     feature_list = [
-        Feature(geometry=d['geometry'], properties=d['properties']) for d in shp
+        Feature(geometry=d["geometry"], properties=d["properties"]) for d in shp
     ]
 
     # We're done here
@@ -78,7 +79,7 @@ def _untar(fileobj):
         # Walk thru each member
         for t in tar:
             # if it's a file ...
-            if (t.isfile()):
+            if t.isfile():
                 # ... extract it ...
                 file_bytes = tar.extractfile(t).read()
                 # .. read it into a file-like object ...

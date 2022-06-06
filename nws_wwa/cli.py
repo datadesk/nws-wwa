@@ -1,9 +1,6 @@
 import click
-from nws_wwa import (
-    get_all,
-    get_hazards,
-    get_warnings
-)
+
+from nws_wwa import get_all, get_hazards, get_warnings
 
 
 @click.group()
@@ -31,5 +28,5 @@ def warnings():
     click.echo(get_warnings())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cmd()
