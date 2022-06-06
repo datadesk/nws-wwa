@@ -3,7 +3,7 @@
 
 # nws-wwa
 
-Download watch, warning and advisory data from the National Weather Service
+Download watch, warning and advisory data from the [National Weather Service](https://www.spc.noaa.gov/products/wwa/)
 
 ```{contents} Table of contents
 :local:
