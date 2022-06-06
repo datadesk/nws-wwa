@@ -9,6 +9,7 @@ flake8 = "*"
 pytest = "*"
 pytest-vcr = "*"
 typing-extensions = "*"
+pre-commit = "*"
 
 [packages]
 fiona = "*"

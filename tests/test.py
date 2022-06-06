@@ -1,9 +1,6 @@
 import pytest
-from nws_wwa import (
-    get_all,
-    get_hazards,
-    get_warnings
-)
+
+from nws_wwa import get_all, get_hazards, get_warnings
 
 
 @pytest.mark.vcr()
