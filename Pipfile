@@ -11,6 +11,8 @@ pytest-vcr = "*"
 typing-extensions = "*"
 pre-commit = "*"
 setuptools-scm = "*"
+sphinx = "*"
+myst-parser = "*"
 
 [packages]
 fiona = "*"
