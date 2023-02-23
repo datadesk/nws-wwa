@@ -60,7 +60,7 @@ def _parse_shapefile(name):
 
     # Convert the shp to GeoJSON features
     feature_list = [
-        Feature(geometry=d["geometry"], properties=d["properties"]) for d in shp
+        Feature(geometry=obj["geometry"], properties=dict(obj["properties"])) for obj in shp
     ]
 
     # We're done here

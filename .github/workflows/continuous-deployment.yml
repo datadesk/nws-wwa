@@ -52,7 +52,7 @@ jobs:
 
       - id: run
         name: Run
-        run: pipenv run python setup.py test
+        run: pipenv run pytest tests/test.py
         shell: bash
 
   test-build:
