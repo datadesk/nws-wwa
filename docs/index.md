@@ -64,7 +64,7 @@ pipenv install --dev
 Run tests.
 
 ```bash
-pipenv run python setup.py test
+pipenv run pytest tests/test.py
 ```
 
 ## Developing the CLI
