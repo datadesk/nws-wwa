@@ -1,0 +1,58 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.28.2
+    method: GET
+    uri: https://tgftp.nws.noaa.gov/SL.us008001/DF.sha/DC.cap/DS.WWA/current_warnings.tar.gz
+  response:
+    body:
+      string: !!binary |
+        H4sICB1292MC/y5jdXJyZW50X3dhcm5pbmdzLnNocC12bS1ibGRyLW5naXR3cy1vcHMtYWxlcnRz
+        c2hhcGUxLm5jZXAubm9hYS5nb3YtNTJlOTUzMGVmMGYzNDRiZTk2ZmUzMGRiOTEwMWIyNWQudGFy
+        AO3ZTWsaQQCH8YGSSz+F7CWX7Wbedmb3UGiJ1nhIIlHpQUSs2RoDWWQ16Efux+imgRgSTAjUgYTn
+        d1AZ3/Dw51FMjpKjb93J5qSYXBaV2At5b9e1lMZub9+dK2VTLRobEcDtcjWp6rf/3x/yndBZ42Y1
+        vym+Kue9clpKm+gsz7y2nwU+vOltVRXlaryeVOW8nC2T5dViH/t39n7jzpm7a+OVf9i8sk/376Q1
+        oiFD7r+czVfr5e7HvXb/O92/EIe7dq7/fBLigIl8aAn9p//0n/5v+7/Zx/7f2v+U/tN/0H/6T/8R
+        rv+Xv36H7n/9DeDJ/lPvLf0H6D/9p/8I1v/pYha+/+mz3//K0f8QBv0fXzJmQP/pP/2n//R/UV2H
+        7r/W6vn//5L+h9BunbePe8Oovhj/bPfGKs9sFDe/9wenw6j56KjXPWldnHeaw2h75ozPlPGJjHWe
+        JTr1WpvUmdEo7l50Tlv1K7SroijX8+lVFMtEjuLBWadfv24xq8//HSlvU6Nznao8t6Z+KpMEAAAA
+        AAAAAAAAAAAAAAB40V9ZIaNKAFAAAA==
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '535'
+      Content-Type:
+      - application/x-gzip
+      Date:
+      - Thu, 23 Feb 2023 14:21:25 GMT
+      ETag:
+      - '"455ad22-217-5f55eb610203c"'
+      Keep-Alive:
+      - timeout=300, max=100
+      Last-Modified:
+      - Thu, 23 Feb 2023 14:20:13 GMT
+      Server:
+      - Apache
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubdomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+version: 1

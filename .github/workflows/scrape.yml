@@ -1,0 +1,56 @@
+name: Scrape
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  scrape:
+    name: Scrape
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install pipenv
+        run: pipx install pipenv
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pipenv'
+
+      - id: pipenv-install
+        name: Install Python dependencies
+        run: pipenv install --dev --python `which python`
+
+      - id: package-install
+        name: Install package
+        run: pipenv run python setup.py install
+        shell: bash
+
+      - id: get-all
+        name: Get all events
+        run: pipenv run nwswwa all > data/all.json
+        shell: bash
+
+      - id: get-hazards
+        name: Get hazards
+        run: pipenv run nwswwa hazards > data/hazards.json
+        shell: bash
+
+      - id: get-warnings
+        name: Get warnings
+        run: pipenv run nwswwa warnings > data/warnings.json
+        shell: bash
+
+      - id: commit
+        name: Commit results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "actions@github.com"
+          git config pull.rebase false
+          git add ./
+          git commit -m "Scrape" && git push || true
+        shell: bash
