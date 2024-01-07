@@ -9,21 +9,20 @@ jobs:
     name: Scrape
     runs-on: ubuntu-latest
     steps:
-      - id: checkout
-        name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pipenv'
 
       - name: Install pipenv
-        run: pipx install pipenv
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          cache: 'pipenv'
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
 
       - id: pipenv-install
         name: Install Python dependencies
-        run: pipenv install --dev --python `which python`
+        run: pipenv sync --dev
 
       - id: package-install
         name: Install package
@@ -45,12 +44,16 @@ jobs:
         run: pipenv run nwswwa warnings > data/warnings.json
         shell: bash
 
+      - name: Datestamp
+        run: date > data/timestamp.txt
+        shell: bash
+
       - id: commit
         name: Commit results
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "actions@github.com"
           git config pull.rebase false
-          git add ./
+          git add ./data
           git commit -m "Scrape" && git push || true
         shell: bash
