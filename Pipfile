@@ -1,0 +1,25 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+twine = "*"
+flake8 = "*"
+pytest = "*"
+pytest-vcr = "*"
+typing-extensions = "*"
+pre-commit = "*"
+setuptools-scm = "*"
+sphinx = "*"
+myst-parser = "*"
+sphinx-palewire-theme = "*"
+
+[packages]
+fiona = "*"
+geojson = "*"
+click = "*"
+requests = "*"
+
+[requires]
+python_version = "3.11"
