@@ -45,7 +45,7 @@ setup(
     url="http://www.github.com/datadesk/nws-wwa",
     license="MIT",
     packages=("nws_wwa",),
-    install_requires=["requests", "fiona", "geojson", "click"],
+    install_requires=["requests", "fiona", "geojson", "click", "exceptiongroup"],
     entry_points="""
         [console_scripts]
         nwswwa=nws_wwa.cli:cmd
