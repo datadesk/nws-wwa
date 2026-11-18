@@ -25,3 +25,11 @@ def test_live_download(func):
         assert {"CAP_ID", "PROD_TYPE", "ISSUANCE", "EXPIRATION", "URL"} <= set(
             feature["properties"]
         )
+
+
+@pytest.mark.parametrize("feed", list(nws_wwa.Feed))
+def test_live_records(feed):
+    """Every alert NWS publishes right now can be read as a typed record."""
+    for alert in nws_wwa.get_alert_records(feed):
+        assert alert.issued_at.tzinfo is not None
+        assert alert.expires_at.tzinfo is not None
