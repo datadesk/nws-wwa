@@ -2,8 +2,6 @@ name: Scrape
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * *'
 
 env:
   UV_PYTHON: '3.13'  # Fiona has no ready-made files for newer Pythons yet

@@ -3,6 +3,7 @@ include README.md
 include .pre-commit-config.yaml
 include uv.lock
 include Makefile
+include nws_wwa/py.typed
 recursive-include docs *.md *.py Makefile
 recursive-include tests *.py
 recursive-include tests *.tar.gz

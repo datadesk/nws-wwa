@@ -185,6 +185,12 @@ NWS says that "The information on National Weather Service (NWS) Web pages are i
 
 NWS does not ask for a credit line there, but crediting the National Weather Service is good practice. The package's code is MIT licensed.
 
+This package only downloads the data. It is not made by NWS and is not endorsed by NWS.
+
+## About this package
+
+AI tools assisted in writing this package's code, tests and documentation. A person directed and reviewed the work.
+
 ## Contributing
 
 This repository's full history is about 12.9 GB on GitHub, because the scraped data files were saved to it for years. Copy only the latest version.
