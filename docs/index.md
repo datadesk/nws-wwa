@@ -22,7 +22,7 @@ Download the current watches, warnings and advisories from the [National Weather
 uv add nws-wwa
 ```
 
-The package reads NWS's shapefiles with [Fiona](https://fiona.readthedocs.io/). Fiona ships ready-made files for Python 3.11, 3.12 and 3.13 on Linux, macOS and Windows. For Python 3.14 you would have to build it yourself.
+The package reads NWS's shapefiles with [pyogrio](https://pyogrio.readthedocs.io/), which ships ready-made files for Python 3.11 to 3.14, so nothing else needs to be installed on your computer. pyogrio brings in numpy, so the install is about 100 MB larger than it was with the Fiona library this package used before.
 
 ## Quick start
 
