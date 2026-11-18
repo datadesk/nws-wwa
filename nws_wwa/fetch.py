@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 import sys
 import time
+from typing import Protocol
 
 import requests
 
@@ -24,6 +25,47 @@ DEFAULT_TRIES = 4
 
 RETRY_STATUS_CODES = frozenset({408, 429})
 """Statuses worth another try. Every 5xx status is also worth another try."""
+
+
+class Reply(Protocol):
+    """What a request function must hand back: a status code and the file's bytes.
+
+    A ``requests.Response`` fits this.
+    """
+
+    @property
+    def status_code(self) -> int:
+        """The web status, such as 200 or 404."""
+        ...
+
+    @property
+    def content(self) -> bytes:
+        """The body of the reply, as bytes."""
+        ...
+
+
+class Fetcher(Protocol):
+    """A function that makes a web request for this package.
+
+    Pass one as ``get`` to add retries, logging or custom headers. ``requests.get``
+    fits this, and is the default.
+
+    Examples:
+        >>> import requests
+        >>> fetcher: Fetcher = requests.get
+    """
+
+    def __call__(self, url: str, *, timeout: float) -> Reply:
+        """Request a web address.
+
+        Args:
+            url: The address to request.
+            timeout: The seconds to wait before giving up.
+
+        Returns:
+            The reply.
+        """
+        ...
 
 
 def file_url(file_name: str) -> str:
@@ -47,6 +89,7 @@ def download_file(
     verbose: bool = False,
     timeout: float = DEFAULT_TIMEOUT,
     tries: int = DEFAULT_TRIES,
+    get: Fetcher | None = None,
 ) -> bytes:
     """Download one of NWS's alert files and return its bytes.
 
@@ -60,6 +103,11 @@ def download_file(
         verbose: Print each request to standard error. Defaults to False.
         timeout: Seconds to wait for NWS on each try. Defaults to 60.
         tries: How many tries to make in all. Defaults to 4.
+        get: A function that makes the web request, such as ``requests.get``
+            (the default). It is called as ``get(url, timeout=seconds)`` and
+            must return something with ``status_code`` and ``content``. Its
+            ``requests`` errors are retried like the default's. Any other error
+            it raises is passed on untouched.
 
     Returns:
         The bytes of the file.
@@ -71,7 +119,9 @@ def download_file(
     Examples:
         >>> data = download_file("current_warnings.tar.gz")
         >>> data = download_file("current_all.tar.gz", timeout=120, tries=2)
+        >>> data = download_file("current_all.tar.gz", get=my_get)
     """
+    fetch: Fetcher = get or requests.get
     url = file_url(file_name)
     problem = None
     for attempt in range(max(tries, 1)):
@@ -80,7 +130,7 @@ def download_file(
         if verbose:
             print(f"Requesting {url}", file=sys.stderr)
         try:
-            response = requests.get(url, timeout=timeout)
+            response = fetch(url, timeout=timeout)
         except (requests.ConnectionError, requests.Timeout) as error:
             problem = NWSError(f"Could not reach NWS at {url}: {error}", url=url)
             continue
