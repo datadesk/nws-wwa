@@ -1,3 +1,7 @@
+"""Methods for downloading watch, warning and advisory data from the National Weather Service."""
+
+from __future__ import annotations
+
 import io
 import tarfile
 import zipfile
@@ -5,6 +9,19 @@ import zipfile
 import fiona
 import requests
 from geojson import Feature, FeatureCollection
+
+from .options import FEED_LIST, Feed
+from .records import Alert
+
+__all__ = [
+    "FEED_LIST",
+    "Alert",
+    "Feed",
+    "get_alert_records",
+    "get_all",
+    "get_hazards",
+    "get_warnings",
+]
 
 
 def get_all():
@@ -32,6 +49,33 @@ def get_warnings():
     Returns a GeoJSON object.
     """
     return _parse_shapefile("current_warnings.tar.gz")
+
+
+def get_alert_records(feed: Feed | str = "all") -> list[Alert]:
+    """Download one of the three feeds as typed records instead of GeoJSON.
+
+    Each record has numbers already parsed and timezone-aware UTC times. See
+    ``Alert`` for every field.
+
+    Args:
+        feed: Which file to download, as a ``Feed`` or its short name: "all",
+            "hazards" or "warnings". Defaults to "all".
+
+    Returns:
+        A list of ``Alert`` records, one for each shape in the file.
+
+    Raises:
+        ValueError: If a row from NWS is missing a column or has a value that
+            cannot be read, or if the feed name is not one of the three.
+
+    Examples:
+        >>> import nws_wwa
+        >>> records = nws_wwa.get_alert_records("hazards")
+        >>> for alert in records:
+        ...     print(alert.product_type, alert.office, alert.expires_at)
+    """
+    data = _parse_shapefile(Feed(feed).file_name)
+    return [Alert.from_feature(feature) for feature in data["features"]]
 
 
 def _parse_shapefile(name):
