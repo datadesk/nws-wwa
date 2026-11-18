@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install lint fix type-check test test-live check build docs clean
+.PHONY: help install lint fix type-check test test-fast test-live check build docs clean
 
 help: ## Show available commands
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "%-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -18,7 +18,10 @@ fix: ## Fix lint problems and format the code
 type-check: ## Check types with ty
 	uv run ty check
 
-test: ## Run the offline tests
+test: ## Run the offline tests and check test coverage
+	uv run pytest --cov
+
+test-fast: ## Run the offline tests without measuring coverage
 	uv run pytest
 
 test-live: ## Run the tests that call the real NWS website

@@ -81,7 +81,12 @@ jobs:
         run: uv sync --group test --python ${{ matrix.python }}
 
       - name: Run offline tests
+        if: matrix.python != '3.13'
         run: uv run pytest
+
+      - name: Run offline tests and check coverage
+        if: matrix.python == '3.13'
+        run: uv run pytest --cov
 
   test-live:
     name: Test against the real NWS website
