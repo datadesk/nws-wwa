@@ -97,9 +97,9 @@ class Alert:
     """One watch, warning, advisory or statement area from the National Weather Service.
 
     This is a copy of what NWS published. It is not an official alert. For
-    anything that affects safety, read the alert on weather.gov. Each record
-    has one shape, so an alert that covers several places can appear as more
-    than one record.
+    anything that affects safety, read the alert on weather.gov. Each record is
+    one row of NWS's file, with one shape. The same alert can have more than
+    one row, so count alerts by ``cap_id`` or ``vtec``, not by records.
 
     Statements and a few other products have no VTEC code, so ``vtec``,
     ``phenomenon``, ``significance``, ``office`` and ``event_number`` can be
