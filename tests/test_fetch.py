@@ -186,3 +186,22 @@ def test_unreadable_record_is_a_data_error(fake_nws, monkeypatch):
     monkeypatch.setattr(records.Alert, "from_feature", staticmethod(broken))
     with pytest.raises(NWSDataError, match="bad row"):
         nws_wwa.get_alert_records("warnings")
+
+
+def test_folders_inside_the_archive_are_skipped(monkeypatch, sample):
+    """Only files are read from the archive, so a folder entry does no harm."""
+    import io
+    import tarfile
+
+    buffer = io.BytesIO()
+    with (
+        tarfile.open(fileobj=io.BytesIO(sample("warnings")), mode="r:gz") as source,
+        tarfile.open(fileobj=buffer, mode="w:gz") as target,
+    ):
+        folder = tarfile.TarInfo("shapes")
+        folder.type = tarfile.DIRTYPE
+        target.addfile(folder)
+        for member in source:
+            target.addfile(member, source.extractfile(member))
+    use(monkeypatch, Recorder(FakeResponse(buffer.getvalue())))
+    assert len(nws_wwa.get_warnings()["features"]) == 1

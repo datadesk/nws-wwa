@@ -211,6 +211,8 @@ Run the checks. `make check` runs lint, the type check and the offline tests, wh
 make check
 ```
 
+`make test` also measures how much of the code the tests run, counting each branch of an `if`. It fails if less than 95 percent is covered (it is 100 percent today). `make test-fast` runs the same tests without measuring. The automated checks measure coverage on the newest Python only.
+
 The tests that call NWS itself are marked `live` and skipped by default. Run them with `make test-live`, or start the "Testing and deployment" workflow by hand on GitHub.
 
 The command-line interface is built with Click. `uv sync --all-groups` installs it, so you can run it with `uv run nwswwa`.
