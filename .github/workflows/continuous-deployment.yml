@@ -1,7 +1,11 @@
 name: Testing and deployment
 on:
   push:
+  pull_request:
   workflow_dispatch:
+
+env:
+  UV_PYTHON: '3.13'  # Fiona has no ready-made files for newer Pythons yet
 
 jobs:
   lint-python:
@@ -10,50 +14,96 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pipenv'
+          fetch-depth: 1
 
-      - name: Install pipenv
-        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
 
-      - id: pipenv-install
-        name: Install Python dependencies
-        run: pipenv sync --dev
+      - name: Install Python dependencies
+        run: uv sync --group dev
 
-      - id: run
-        name: Run
-        run: pipenv run flake8 nws_wwa
+      - name: Check with Ruff
+        run: uv run ruff check
 
-  test-python:
-    strategy:
-      matrix:
-        python: ['3.9', '3.10', '3.11']
-    name: Test
+      - name: Check formatting with Ruff
+        run: uv run ruff format --check
+
+  type-check-python:
+    name: Type check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
-          cache: 'pipenv'
+          fetch-depth: 1
 
-      - name: Install pipenv
-        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
 
-      - id: pipenv-install
-        name: Install Python dependencies
-        run: pipenv install --skip-lock --dev --python `which python`
-        shell: bash
+      - name: Install Python dependencies
+        run: uv sync --group dev
 
-      - id: run
-        name: Run
-        run: pipenv run pytest tests/test.py
-        shell: bash
+      - name: Check types with ty
+        run: uv run ty check
+
+  test-python:
+    strategy:
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [lint-python, type-check-python]
+    env:
+      UV_PYTHON: ${{ matrix.python }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
+
+      - name: Install Python
+        run: uv python install ${{ matrix.python }}
+
+      - name: Install Python dependencies
+        run: uv sync --group test --python ${{ matrix.python }}
+
+      - name: Run offline tests
+        run: uv run pytest
+
+  test-live:
+    name: Test against the real NWS website
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
+
+      - name: Install Python dependencies
+        run: uv sync --group test
+
+      - name: Run live tests
+        run: uv run pytest -m live
 
   test-build:
     name: Build Python package
@@ -62,29 +112,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pipenv'
+          fetch-depth: 1
 
-      - name: Install pipenv
-        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
 
-      - id: pipenv-install
-        name: Install Python dependencies
-        run: pipenv sync --dev
+      - name: Install Python dependencies
+        run: uv sync --group dev
 
       - id: build
         name: Build release
         run: |
-            pipenv run python setup.py sdist
-            pipenv run python setup.py bdist_wheel
-            ls -l dist
+          uv build --sdist --wheel
+          ls -l dist
 
       - id: check
         name: Check release
-        run: pipenv run twine check dist/*
+        run: uv run twine check dist/*
 
       - id: save
         name: Save artifact

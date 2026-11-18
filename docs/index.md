@@ -10,7 +10,7 @@ Download watch, warning and advisory data from the [National Weather Service](ht
 ## Installation
 
 ```bash
-pipenv install nws-wwa
+uv add nws-wwa
 ```
 
 ## Command-line usage
@@ -55,22 +55,18 @@ data = nws_wwa.get_warnings()
 Install dependencies for development.
 
 ```bash
-pipenv install --dev
+uv sync --all-groups
 ```
 
 Run tests.
 
 ```bash
-pipenv run pytest tests/test.py
+make test
 ```
 
 ## Developing the CLI
 
-The command-line interface is implemented using Click and setuptools. To install it locally for development inside your virtual environment, run the following installation command, as prescribed by the [Click documentation](https://click.palletsprojects.com/en/7.x/setuptools/#setuptools-integration).
-
-```bash
-pipenv run pip install --editable .
-```
+The command-line interface is implemented using Click and setuptools. `uv sync --all-groups` installs it into the project's virtual environment, so you can run it with `uv run nwswwa`.
 
 ## Other resources
 

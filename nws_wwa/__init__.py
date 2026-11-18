@@ -60,7 +60,8 @@ def _parse_shapefile(name):
 
     # Convert the shp to GeoJSON features
     feature_list = [
-        Feature(geometry=obj["geometry"], properties=dict(obj["properties"])) for obj in shp
+        Feature(geometry=obj["geometry"], properties=dict(obj["properties"]))
+        for obj in shp
     ]
 
     # We're done here
@@ -81,7 +82,9 @@ def _untar(fileobj):
             # if it's a file ...
             if t.isfile():
                 # ... extract it ...
-                file_bytes = tar.extractfile(t).read()
+                member = tar.extractfile(t)
+                assert member is not None
+                file_bytes = member.read()
                 # .. read it into a file-like object ...
                 file_buffer = io.BytesIO(file_bytes)
                 # ... add it to our file dict with its name.

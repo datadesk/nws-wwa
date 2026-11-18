@@ -1,2 +1,11 @@
 include LICENSE
-include README.rst
+include README.md
+include .pre-commit-config.yaml
+include uv.lock
+include Makefile
+recursive-include docs *.md *.py Makefile
+recursive-include tests *.py
+recursive-include tests *.tar.gz
+recursive-include tests *.json
+prune data
+prune docs/_build
