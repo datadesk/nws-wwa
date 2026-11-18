@@ -16,6 +16,14 @@ class FakeResponse:
         self.ok = status_code < 400
 
 
+@pytest.fixture(autouse=True)
+def no_waiting(monkeypatch):
+    """Skip the pauses between retries so the tests run fast."""
+    from nws_wwa import fetch
+
+    monkeypatch.setattr(fetch.time, "sleep", lambda seconds: None)
+
+
 @pytest.fixture
 def sample():
     """Return a function that reads a saved sample file as bytes.
@@ -37,7 +45,7 @@ def fake_nws(monkeypatch, sample):
     The fake answers each request with the sample that matches the file name in
     the address, such as ``current_hazards.tar.gz``.
     """
-    import nws_wwa
+    from nws_wwa import fetch
 
     class Fake:
         urls: list[str]
@@ -50,5 +58,5 @@ def fake_nws(monkeypatch, sample):
         name = url.rsplit("/", 1)[-1].removeprefix("current_").removesuffix(".tar.gz")
         return FakeResponse(sample(name))
 
-    monkeypatch.setattr(nws_wwa.requests, "get", get)
+    monkeypatch.setattr(fetch.requests, "get", get)
     return fake
