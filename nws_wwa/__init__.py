@@ -7,9 +7,11 @@ import tarfile
 import zipfile
 
 import fiona
-import requests
+import fiona.errors
 from geojson import Feature, FeatureCollection
 
+from .errors import NWSDataError, NWSError
+from .fetch import DEFAULT_TIMEOUT, download_file
 from .options import FEED_LIST, Feed
 from .records import Alert
 
@@ -17,6 +19,8 @@ __all__ = [
     "FEED_LIST",
     "Alert",
     "Feed",
+    "NWSDataError",
+    "NWSError",
     "get_alert_records",
     "get_all",
     "get_hazards",
@@ -24,34 +28,83 @@ __all__ = [
 ]
 
 
-def get_all():
+def get_all(
+    verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+) -> FeatureCollection:
+    """Get all watch, warning and advisory data.
+
+    Args:
+        verbose: Print each request to standard error. Defaults to False.
+        timeout: Seconds to wait for NWS on each try. Defaults to 60.
+
+    Returns:
+        A GeoJSON feature collection with one feature for each alert shape.
+
+    Raises:
+        NWSError: If NWS cannot be reached after several tries, or answers
+            with an error.
+        NWSDataError: If the file arrives but cannot be read.
+
+    Examples:
+        >>> import nws_wwa
+        >>> data = nws_wwa.get_all()
     """
-    Get all watch, warning and advisory data.
+    return _parse_shapefile(Feed.ALL.file_name, verbose, timeout)
 
-    Returns a GeoJSON object.
+
+def get_hazards(
+    verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+) -> FeatureCollection:
+    """Get all hazards data.
+
+    Args:
+        verbose: Print each request to standard error. Defaults to False.
+        timeout: Seconds to wait for NWS on each try. Defaults to 60.
+
+    Returns:
+        A GeoJSON feature collection with one feature for each alert shape.
+
+    Raises:
+        NWSError: If NWS cannot be reached after several tries, or answers
+            with an error.
+        NWSDataError: If the file arrives but cannot be read.
+
+    Examples:
+        >>> import nws_wwa
+        >>> data = nws_wwa.get_hazards()
     """
-    return _parse_shapefile("current_all.tar.gz")
+    return _parse_shapefile(Feed.HAZARDS.file_name, verbose, timeout)
 
 
-def get_hazards():
+def get_warnings(
+    verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+) -> FeatureCollection:
+    """Get all warning data.
+
+    Args:
+        verbose: Print each request to standard error. Defaults to False.
+        timeout: Seconds to wait for NWS on each try. Defaults to 60.
+
+    Returns:
+        A GeoJSON feature collection with one feature for each alert shape.
+
+    Raises:
+        NWSError: If NWS cannot be reached after several tries, or answers
+            with an error.
+        NWSDataError: If the file arrives but cannot be read.
+
+    Examples:
+        >>> import nws_wwa
+        >>> data = nws_wwa.get_warnings()
     """
-    Get all hazards data.
-
-    Returns a GeoJSON object.
-    """
-    return _parse_shapefile("current_hazards.tar.gz")
+    return _parse_shapefile(Feed.WARNINGS.file_name, verbose, timeout)
 
 
-def get_warnings():
-    """
-    Get all warning data.
-
-    Returns a GeoJSON object.
-    """
-    return _parse_shapefile("current_warnings.tar.gz")
-
-
-def get_alert_records(feed: Feed | str = "all") -> list[Alert]:
+def get_alert_records(
+    feed: Feed | str = "all",
+    verbose: bool = False,
+    timeout: float = DEFAULT_TIMEOUT,
+) -> list[Alert]:
     """Download one of the three feeds as typed records instead of GeoJSON.
 
     Each record has numbers already parsed and timezone-aware UTC times. See
@@ -60,13 +113,18 @@ def get_alert_records(feed: Feed | str = "all") -> list[Alert]:
     Args:
         feed: Which file to download, as a ``Feed`` or its short name: "all",
             "hazards" or "warnings". Defaults to "all".
+        verbose: Print each request to standard error. Defaults to False.
+        timeout: Seconds to wait for NWS on each try. Defaults to 60.
 
     Returns:
         A list of ``Alert`` records, one for each shape in the file.
 
     Raises:
-        ValueError: If a row from NWS is missing a column or has a value that
-            cannot be read, or if the feed name is not one of the three.
+        NWSError: If NWS cannot be reached after several tries, or answers
+            with an error.
+        NWSDataError: If a row from NWS is missing a column or has a value
+            that cannot be read. This is also a ``ValueError``.
+        ValueError: If the feed name is not one of the three.
 
     Examples:
         >>> import nws_wwa
@@ -74,41 +132,54 @@ def get_alert_records(feed: Feed | str = "all") -> list[Alert]:
         >>> for alert in records:
         ...     print(alert.product_type, alert.office, alert.expires_at)
     """
-    data = _parse_shapefile(Feed(feed).file_name)
-    return [Alert.from_feature(feature) for feature in data["features"]]
+    data = _parse_shapefile(Feed(feed).file_name, verbose, timeout)
+    try:
+        return [Alert.from_feature(feature) for feature in data["features"]]
+    except ValueError as error:
+        raise NWSDataError(str(error)) from error
 
 
-def _parse_shapefile(name):
+def _parse_shapefile(
+    name: str, verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+) -> FeatureCollection:
+    """Download one of NWS's shapefile archives and convert it to GeoJSON.
+
+    Args:
+        name: The file name on the NWS server, such as "current_all.tar.gz".
+        verbose: Print each request to standard error. Defaults to False.
+        timeout: Seconds to wait for NWS on each try. Defaults to 60.
+
+    Returns:
+        A GeoJSON feature collection.
+
+    Raises:
+        NWSError: If NWS cannot be reached or answers with an error.
+        NWSDataError: If the file is not a readable shapefile archive.
+
+    Examples:
+        >>> data = _parse_shapefile("current_warnings.tar.gz")
     """
-    Downloads the provided shapefile from GeoMAC.
+    content = download_file(name, verbose=verbose, timeout=timeout)
+    buffer = io.BytesIO(bytes(content))
 
-    Returns a GeoJSON object.
-    """
-    # Figure out the url
-    domain = "tgftp.nws.noaa.gov"
-    base_dir = "SL.us008001/DF.sha/DC.cap/DS.WWA"
-    url = f"https://{domain}/{base_dir}/{name}"
+    try:
+        # Untar it
+        file_dict = _untar(buffer)
+        if not any(n.endswith(".shp") for n in file_dict):
+            raise NWSDataError(f"The file {name} has no shapefile inside")
 
-    # Get the zipfile
-    r = requests.get(url)
-    buffer = io.BytesIO(bytes(r.content))
+        # Stuff it into a zip
+        zf = _zip(file_dict)
 
-    # Untar it
-    file_dict = _untar(buffer)
+        # Ask fiona to read to the zip, and convert the shapes to GeoJSON features
+        with fiona.BytesCollection(zf.getvalue()) as shp:
+            feature_list = [
+                Feature(geometry=obj["geometry"], properties=dict(obj["properties"]))
+                for obj in shp
+            ]
+    except (tarfile.TarError, EOFError, OSError, fiona.errors.FionaError) as error:
+        raise NWSDataError(f"The file {name} could not be read: {error}") from error
 
-    # Stuff it into a zip
-    zf = _zip(file_dict)
-
-    # Ask fiona to read to the zip
-    shp = fiona.BytesCollection(zf.getvalue())
-
-    # Convert the shp to GeoJSON features
-    feature_list = [
-        Feature(geometry=obj["geometry"], properties=dict(obj["properties"]))
-        for obj in shp
-    ]
-
-    # We're done here
     return FeatureCollection(feature_list)
 
 
