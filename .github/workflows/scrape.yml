@@ -1,47 +1,48 @@
 name: Scrape
+
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 6 * * *'
+
+env:
+  UV_PYTHON: '3.13'  # Fiona has no ready-made files for newer Pythons yet
 
 jobs:
   scrape:
     name: Scrape
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - id: checkout
+        name: Checkout
         uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pipenv'
+          fetch-depth: 1
 
-      - name: Install pipenv
-        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+      - id: install-uv
+        name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
 
-      - id: pipenv-install
-        name: Install Python dependencies
-        run: pipenv sync --dev
-
-      - id: package-install
-        name: Install package
-        run: pipenv run python setup.py install
+      - name: Setup
+        run: uv sync
         shell: bash
 
       - id: get-all
         name: Get all events
-        run: pipenv run nwswwa all > data/all.json
+        run: uv run nwswwa all > data/all.json
         shell: bash
 
       - id: get-hazards
         name: Get hazards
-        run: pipenv run nwswwa hazards > data/hazards.json
+        run: uv run nwswwa hazards > data/hazards.json
         shell: bash
 
       - id: get-warnings
         name: Get warnings
-        run: pipenv run nwswwa warnings > data/warnings.json
+        run: uv run nwswwa warnings > data/warnings.json
         shell: bash
 
       - name: Datestamp
@@ -54,6 +55,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "actions@github.com"
           git config pull.rebase false
+          git status
+          git pull origin $GITHUB_REF
           git add ./data
           git commit -m "Scrape" && git push || true
         shell: bash

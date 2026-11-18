@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nws-wwa"
+dynamic = ["version"]
+requires-python = ">=3.11"
+dependencies = [
+    "click",
+    "fiona",
+    "geojson",
+    "requests",
+]
+authors = [{ name = "Ben Welsh", email = "b@palewi.re" }]
+description = "Download watch, warning and advisory data from the National Weather Service"
+keywords = ["weather", "nws", "noaa", "alerts", "geojson", "data"]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Documentation = "https://palewi.re/docs/nws-wwa/"
+Source = "https://github.com/datadesk/nws-wwa"
+Issues = "https://github.com/datadesk/nws-wwa/issues"
+Maintainer = "https://github.com/datadesk"
+
+[project.scripts]
+nwswwa = "nws_wwa.cli:cmd"
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "ruff",
+    "setuptools-scm",
+    "twine",
+    "ty",
+]
+test = [
+    "pytest",
+]
+docs = [
+    "myst-parser",
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-palewire-theme",
+]
+
+[tool.setuptools]
+packages = ["nws_wwa"]
+
+[tool.setuptools_scm]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "-m", "not live"]
+markers = [
+    "live: talks to the real National Weather Service website, so it can be slow or fail when NWS is down",
+]
+
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.src]
+include = ["nws_wwa"]
