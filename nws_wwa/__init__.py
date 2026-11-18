@@ -6,14 +6,13 @@ import io
 import tarfile
 import zipfile
 
-import fiona
-import fiona.errors
-from geojson import Feature, FeatureCollection
+from geojson import FeatureCollection
 
 from .errors import NWSDataError, NWSError
 from .fetch import DEFAULT_TIMEOUT, Fetcher, Reply, download_file
 from .options import FEED_LIST, Feed
 from .records import Alert
+from .shapes import read_shapefile_zip
 
 __all__ = [
     "FEED_LIST",
@@ -203,16 +202,14 @@ def _parse_shapefile(
         # Stuff it into a zip
         zf = _zip(file_dict)
 
-        # Ask fiona to read to the zip, and convert the shapes to GeoJSON features
-        with fiona.BytesCollection(zf.getvalue()) as shp:
-            feature_list = [
-                Feature(geometry=obj["geometry"], properties=dict(obj["properties"]))
-                for obj in shp
-            ]
-    except (tarfile.TarError, EOFError, OSError, fiona.errors.FionaError) as error:
+        # Read the shapes and convert them to GeoJSON features
+        feature_collection = read_shapefile_zip(zf.getvalue())
+    except NWSDataError:
+        raise
+    except (tarfile.TarError, EOFError, OSError, RuntimeError, ValueError) as error:
         raise NWSDataError(f"The file {name} could not be read: {error}") from error
 
-    return FeatureCollection(feature_list)
+    return feature_collection
 
 
 def _untar(fileobj):

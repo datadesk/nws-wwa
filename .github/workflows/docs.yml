@@ -5,9 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  UV_PYTHON: '3.13'  # Fiona has no ready-made files for newer Pythons yet
-
 jobs:
   build:
     name: Build
