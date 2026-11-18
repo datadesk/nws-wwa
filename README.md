@@ -69,6 +69,7 @@ The automated checks do the same, so the version number comes from a tag only on
 * **Downloads retry.** A request waits 60 seconds, then tries again on network errors and server errors, and raises `nws_wwa.NWSError` if it still fails.
 * **The same alert can fill several rows.** Count alerts by `CAP_ID` or `VTEC`, not by rows.
 * **The data comes from NWS.** NWS says its web pages are in the public domain and provided "as is". The documentation quotes its disclaimer. The code is MIT.
+* **AI helped write this package.** AI tools assisted in writing its code, tests and documentation. A person directed and reviewed the work.
 
 The documentation has the full field reference and what each kind of product means.
 
