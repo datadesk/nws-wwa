@@ -9,6 +9,7 @@ requires-python = ">=3.11"
 dependencies = [
     "click",
     "pyogrio",
+    "shapely",
     "geojson",
     "requests",
 ]

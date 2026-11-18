@@ -1,71 +1,56 @@
-"""Read the shapefile NWS publishes, with pyogrio and without shapely."""
+"""Read the shapefile NWS publishes, with pyogrio and shapely."""
 
 from __future__ import annotations
 
-import struct
 from typing import Any
 
+import shapely
 from geojson import Feature, FeatureCollection, MultiPolygon, Polygon
 from pyogrio.raw import read
 
 
-def _polygon(buf: bytes, pos: int) -> tuple[list[list[list[float]]], int]:
-    """Read one polygon from well-known binary (WKB).
+def _lists(value: Any) -> Any:
+    """Turn the tuples shapely returns into the lists GeoJSON uses.
 
     Args:
-        buf: The bytes of the geometry.
-        pos: Where the polygon starts.
+        value: A coordinate, or any nesting of coordinates in tuples.
 
     Returns:
-        The rings of the polygon, and the position just after it.
-
-    Raises:
-        ValueError: If it is not a 2D polygon.
+        The same numbers in the same order, with every tuple made a list.
 
     Examples:
-        >>> wkb = bytes.fromhex("01030000000100000004000000" + "00" * 64)
-        >>> len(_polygon(wkb, 0)[0][0])
-        4
+        >>> _lists((((0.0, 1.0), (2.0, 3.0)),))
+        [[[0.0, 1.0], [2.0, 3.0]]]
     """
-    order = "<" if buf[pos] == 1 else ">"
-    (kind,) = struct.unpack_from(order + "I", buf, pos + 1)
-    if kind != 3:
-        raise ValueError(f"unsupported geometry type {kind}")
-    (count,) = struct.unpack_from(order + "I", buf, pos + 5)
-    pos += 9
-    rings = []
-    for _ in range(count):
-        (n,) = struct.unpack_from(order + "I", buf, pos)
-        pts = struct.unpack_from(f"{order}{2 * n}d", buf, pos + 4)
-        rings.append([[pts[i], pts[i + 1]] for i in range(0, 2 * n, 2)])
-        pos += 4 + 16 * n
-    return rings, pos
+    if isinstance(value, tuple | list):
+        return [_lists(item) for item in value]
+    return value
 
 
-def wkb_to_geometry(wkb: bytes) -> Polygon | MultiPolygon:
-    """Turn well-known binary into a GeoJSON polygon or multipolygon.
+def to_geometry(shape: shapely.Geometry) -> Polygon | MultiPolygon:
+    """Turn a shapely polygon or multipolygon into a GeoJSON one.
 
     Args:
-        wkb: The geometry as WKB bytes.
+        shape: The shapely geometry.
 
     Returns:
-        A GeoJSON ``Polygon`` or ``MultiPolygon``.
+        A GeoJSON ``Polygon`` or ``MultiPolygon`` with the same coordinates in
+        the same order.
 
     Raises:
-        ValueError: If the geometry is not a 2D polygon or multipolygon.
+        ValueError: If the shape is not a polygon or multipolygon.
+
+    Examples:
+        >>> square = shapely.from_wkt("POLYGON ((0 0, 1 0, 1 1, 0 0))")
+        >>> to_geometry(square)["coordinates"]
+        [[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]]]
     """
-    buf = bytes(wkb)
-    order = "<" if buf[0] == 1 else ">"
-    (kind,) = struct.unpack_from(order + "I", buf, 1)
-    if kind == 3:
-        return Polygon(_polygon(buf, 0)[0])
-    if kind == 6:
-        (count,) = struct.unpack_from(order + "I", buf, 5)
-        pos, polygons = 9, []
-        for _ in range(count):
-            rings, pos = _polygon(buf, pos)
-            polygons.append(rings)
-        return MultiPolygon(polygons)
+    kind = shape.geom_type
+    coordinates = _lists(shape.__geo_interface__["coordinates"])
+    if kind == "Polygon":
+        return Polygon(coordinates)
+    if kind == "MultiPolygon":
+        return MultiPolygon(coordinates)
     raise ValueError(f"unsupported geometry type {kind}")
 
 
@@ -80,14 +65,18 @@ def read_shapefile_zip(content: bytes) -> FeatureCollection:
 
     Raises:
         RuntimeError: If GDAL cannot read the file.
-        ValueError: If a shape is not a 2D polygon.
+        ValueError: If a shape is not a polygon or multipolygon.
+
+    Examples:
+        >>> data = read_shapefile_zip(zip_bytes)  # doctest: +SKIP
     """
     meta, _, geometries, columns = read(content, encoding="utf-8")
+    shapes = shapely.from_wkb(geometries)
     features = []
-    for i, wkb in enumerate(geometries):
+    for i, shape in enumerate(shapes):
         properties: dict[str, Any] = {}
         for name, column in zip(meta["fields"], columns, strict=True):
             value = column[i]
             properties[str(name)] = value.item() if hasattr(value, "item") else value
-        features.append(Feature(geometry=wkb_to_geometry(wkb), properties=properties))
+        features.append(Feature(geometry=to_geometry(shape), properties=properties))
     return FeatureCollection(features)

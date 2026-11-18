@@ -22,7 +22,7 @@ Download the current watches, warnings and advisories from the [National Weather
 uv add nws-wwa
 ```
 
-The package reads NWS's shapefiles with [pyogrio](https://pyogrio.readthedocs.io/), which ships ready-made files for Python 3.11 to 3.14, so nothing else needs to be installed on your computer. pyogrio brings in numpy, so the install is about 100 MB larger than it was with the Fiona library this package used before.
+The package reads NWS's shapefiles with [pyogrio](https://pyogrio.readthedocs.io/), which ships ready-made files for Python 3.11 to 3.14, so nothing else needs to be installed on your computer. pyogrio brings in numpy, and this package also uses shapely (about 8 MB) to read the shapes, so the install is about 110 MB larger than it was with the Fiona library this package used before.
 
 ## Quick start
 

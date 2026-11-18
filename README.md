@@ -66,7 +66,7 @@ The automated checks do the same, so the version number comes from a tag only on
 ## Things to know
 
 * **It is a copy, and it can be old.** NWS rewrites the files every few minutes, but this package only downloads when you ask it to.
-* **Python 3.11 to 3.14 work.** The shapefiles are read with pyogrio, which needs numpy, so the install is about 100 MB.
+* **Python 3.11 to 3.14 work.** The shapefiles are read with pyogrio and shapely, which need numpy, so the install is about 110 MB larger than before.
 * **Downloads retry.** A request waits 60 seconds, then tries again on network errors and server errors, and raises `nws_wwa.NWSError` if it still fails.
 * **The same alert can fill several rows.** Count alerts by `CAP_ID` or `VTEC`, not by rows.
 * **The data comes from NWS.** NWS says its web pages are in the public domain and provided "as is". The documentation quotes its disclaimer. The code is MIT.
