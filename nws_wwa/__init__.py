@@ -11,7 +11,7 @@ import fiona.errors
 from geojson import Feature, FeatureCollection
 
 from .errors import NWSDataError, NWSError
-from .fetch import DEFAULT_TIMEOUT, download_file
+from .fetch import DEFAULT_TIMEOUT, Fetcher, Reply, download_file
 from .options import FEED_LIST, Feed
 from .records import Alert
 
@@ -19,8 +19,10 @@ __all__ = [
     "FEED_LIST",
     "Alert",
     "Feed",
+    "Fetcher",
     "NWSDataError",
     "NWSError",
+    "Reply",
     "get_alert_records",
     "get_all",
     "get_hazards",
@@ -29,13 +31,19 @@ __all__ = [
 
 
 def get_all(
-    verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+    verbose: bool = False,
+    timeout: float = DEFAULT_TIMEOUT,
+    *,
+    get: Fetcher | None = None,
 ) -> FeatureCollection:
     """Get all watch, warning and advisory data.
 
     Args:
         verbose: Print each request to standard error. Defaults to False.
         timeout: Seconds to wait for NWS on each try. Defaults to 60.
+        get: A function that makes the web request, such as ``requests.get``
+            (the default). Pass your own to add retries, logging or custom
+            headers. It is called as ``get(url, timeout=seconds)``.
 
     Returns:
         A GeoJSON feature collection with one feature for each alert shape.
@@ -48,18 +56,25 @@ def get_all(
     Examples:
         >>> import nws_wwa
         >>> data = nws_wwa.get_all()
+        >>> data = nws_wwa.get_all(get=my_get)
     """
-    return _parse_shapefile(Feed.ALL.file_name, verbose, timeout)
+    return _parse_shapefile(Feed.ALL.file_name, verbose, timeout, get)
 
 
 def get_hazards(
-    verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+    verbose: bool = False,
+    timeout: float = DEFAULT_TIMEOUT,
+    *,
+    get: Fetcher | None = None,
 ) -> FeatureCollection:
     """Get all hazards data.
 
     Args:
         verbose: Print each request to standard error. Defaults to False.
         timeout: Seconds to wait for NWS on each try. Defaults to 60.
+        get: A function that makes the web request, such as ``requests.get``
+            (the default). Pass your own to add retries, logging or custom
+            headers. It is called as ``get(url, timeout=seconds)``.
 
     Returns:
         A GeoJSON feature collection with one feature for each alert shape.
@@ -73,17 +88,23 @@ def get_hazards(
         >>> import nws_wwa
         >>> data = nws_wwa.get_hazards()
     """
-    return _parse_shapefile(Feed.HAZARDS.file_name, verbose, timeout)
+    return _parse_shapefile(Feed.HAZARDS.file_name, verbose, timeout, get)
 
 
 def get_warnings(
-    verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+    verbose: bool = False,
+    timeout: float = DEFAULT_TIMEOUT,
+    *,
+    get: Fetcher | None = None,
 ) -> FeatureCollection:
     """Get all warning data.
 
     Args:
         verbose: Print each request to standard error. Defaults to False.
         timeout: Seconds to wait for NWS on each try. Defaults to 60.
+        get: A function that makes the web request, such as ``requests.get``
+            (the default). Pass your own to add retries, logging or custom
+            headers. It is called as ``get(url, timeout=seconds)``.
 
     Returns:
         A GeoJSON feature collection with one feature for each alert shape.
@@ -97,13 +118,15 @@ def get_warnings(
         >>> import nws_wwa
         >>> data = nws_wwa.get_warnings()
     """
-    return _parse_shapefile(Feed.WARNINGS.file_name, verbose, timeout)
+    return _parse_shapefile(Feed.WARNINGS.file_name, verbose, timeout, get)
 
 
 def get_alert_records(
     feed: Feed | str = "all",
     verbose: bool = False,
     timeout: float = DEFAULT_TIMEOUT,
+    *,
+    get: Fetcher | None = None,
 ) -> list[Alert]:
     """Download one of the three feeds as typed records instead of GeoJSON.
 
@@ -115,6 +138,9 @@ def get_alert_records(
             "hazards" or "warnings". Defaults to "all".
         verbose: Print each request to standard error. Defaults to False.
         timeout: Seconds to wait for NWS on each try. Defaults to 60.
+        get: A function that makes the web request, such as ``requests.get``
+            (the default). Pass your own to add retries, logging or custom
+            headers. It is called as ``get(url, timeout=seconds)``.
 
     Returns:
         A list of ``Alert`` records, one for each shape in the file.
@@ -132,7 +158,7 @@ def get_alert_records(
         >>> for alert in records:
         ...     print(alert.product_type, alert.office, alert.expires_at)
     """
-    data = _parse_shapefile(Feed(feed).file_name, verbose, timeout)
+    data = _parse_shapefile(Feed(feed).file_name, verbose, timeout, get)
     try:
         return [Alert.from_feature(feature) for feature in data["features"]]
     except ValueError as error:
@@ -140,7 +166,10 @@ def get_alert_records(
 
 
 def _parse_shapefile(
-    name: str, verbose: bool = False, timeout: float = DEFAULT_TIMEOUT
+    name: str,
+    verbose: bool = False,
+    timeout: float = DEFAULT_TIMEOUT,
+    get: Fetcher | None = None,
 ) -> FeatureCollection:
     """Download one of NWS's shapefile archives and convert it to GeoJSON.
 
@@ -148,6 +177,9 @@ def _parse_shapefile(
         name: The file name on the NWS server, such as "current_all.tar.gz".
         verbose: Print each request to standard error. Defaults to False.
         timeout: Seconds to wait for NWS on each try. Defaults to 60.
+        get: A function that makes the web request, such as ``requests.get``
+            (the default). Pass your own to add retries, logging or custom
+            headers. It is called as ``get(url, timeout=seconds)``.
 
     Returns:
         A GeoJSON feature collection.
@@ -159,7 +191,7 @@ def _parse_shapefile(
     Examples:
         >>> data = _parse_shapefile("current_warnings.tar.gz")
     """
-    content = download_file(name, verbose=verbose, timeout=timeout)
+    content = download_file(name, verbose=verbose, timeout=timeout, get=get)
     buffer = io.BytesIO(bytes(content))
 
     try:
